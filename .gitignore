@@ -1,0 +1,12 @@
+.build/
+build/
+.swiftpm/
+.DS_Store
+
+# Private Schlüssel niemals einchecken
+ssh-keygen*
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pem
+*.key
