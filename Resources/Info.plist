@@ -8,6 +8,8 @@
 	<string>ServerPulse</string>
 	<key>CFBundleExecutable</key>
 	<string>ServerPulse</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.serverpulse.ServerPulse</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -29,6 +31,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>ServerPulse</string>
+	<string>© 2026 Cem · MIT License</string>
 </dict>
 </plist>

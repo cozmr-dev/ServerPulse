@@ -260,6 +260,14 @@ final class MonitorViewModel {
         }
     }
 
+    #if DEBUG
+    /// Nur für Vorschauen und Screenshots: setzt Messwerte ohne SSH-Abfrage.
+    func injectPreview(_ snapshot: HostSnapshot, for hostID: UUID) {
+        statuses[hostID] = HostStatus(snapshot: snapshot)
+        lastRefresh = snapshot.fetchedAt
+    }
+    #endif
+
     private func busyKey(_ containerID: String, _ hostID: UUID) -> String {
         "\(hostID.uuidString)/\(containerID)"
     }
