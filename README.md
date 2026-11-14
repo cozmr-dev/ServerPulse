@@ -24,7 +24,7 @@
 
 Tested with UGREEN NAS (UGOS), but any Linux host with `/proc` and Docker works.
 
-> The app's interface is currently in German.
+> Available in English and German – ServerPulse follows your system language.
 
 ## Installation
 
@@ -71,19 +71,19 @@ ServerPulse logs in with an SSH key only (`BatchMode=yes`), so it never hangs on
    ```bash
    sudo usermod -aG docker <user>
    ```
-4. In ServerPulse open **Settings → Server hinzufügen**, enter host, port and user, then click **Verbindung testen**.
+4. In ServerPulse open **Settings → Add Server**, enter host, port and user, then click **Test Connection**.
 
 **Troubleshooting**
 
 | Message | Fix |
 | --- | --- |
-| *Anmeldung abgelehnt (Permission denied)* | Public key not on the server, or the key has a passphrase that is not in the ssh-agent. |
+| *Login as “user” was rejected (Permission denied)* | Public key not on the server, or the key has a passphrase that is not in the ssh-agent. |
 | *Could not chdir to home directory* (during `ssh-copy-id`) | The user has no home folder. Enable the user home service on the NAS or create `/home/<user>`. |
-| *Keine Berechtigung für Docker* | Add the user to the `docker` group (step 3). |
+| *No permission for Docker* | Add the user to the `docker` group (step 3). |
 
 ## How it works
 
-Every refresh runs **one** SSH session per host and pipes a small POSIX shell script to `sh -s`. It reads `/proc/stat`, `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime`, `df` and `docker ps`, and returns clearly separated sections that the app parses. Container actions run `docker start|stop|restart|logs` the same way. Container IDs are validated before they reach the remote shell.
+Every refresh runs **one** SSH command per host and pipes a small POSIX shell script to `sh -s`. Thanks to OpenSSH connection multiplexing (`ControlMaster`/`ControlPersist`), the connection is kept open in the background for 60 seconds and reused, so a refresh takes about half a second and your server does not log a new login every few seconds. If the connection drops, the next refresh simply opens a new one. It reads `/proc/stat`, `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime`, `df` and `docker ps`, and returns clearly separated sections that the app parses. Container actions run `docker start|stop|restart|logs` the same way. Container IDs are validated before they reach the remote shell.
 
 Your server list is stored locally in `UserDefaults`. ServerPulse sends no telemetry and talks to nothing but your own servers.
 

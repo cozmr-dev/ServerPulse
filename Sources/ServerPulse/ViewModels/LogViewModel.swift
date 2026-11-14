@@ -28,7 +28,7 @@ final class LogViewModel {
         errorMessage = nil
         do {
             let logs = Self.stripANSI(try await service.fetchLogs(container.id, lines: lineCount, on: host))
-            text = logs.isEmpty ? "(Keine Log-Ausgabe vorhanden)" : logs
+            text = logs.isEmpty ? String(localized: "(No log output)") : logs
             loadedAt = Date()
         } catch {
             let suggestion = (error as? SSHError)?.recoverySuggestion.map { "\n\($0)" } ?? ""

@@ -36,7 +36,7 @@ final class HostStore {
             do {
                 loaded = try JSONDecoder().decode([ServerHost].self, from: data)
             } catch {
-                problem = "Gespeicherte Hosts konnten nicht gelesen werden: \(error.localizedDescription)"
+                problem = String(localized: "Saved servers could not be read: \(error.localizedDescription)")
             }
         }
         hosts = loaded
@@ -80,7 +80,7 @@ final class HostStore {
             defaults.set(data, forKey: Keys.hosts)
             loadError = nil
         } catch {
-            loadError = "Hosts konnten nicht gespeichert werden: \(error.localizedDescription)"
+            loadError = String(localized: "Servers could not be saved: \(error.localizedDescription)")
         }
     }
 }

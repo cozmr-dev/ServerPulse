@@ -17,23 +17,23 @@ enum RefreshInterval: Int, CaseIterable, Identifiable, Codable, Sendable {
 
     var label: String {
         switch self {
-        case .manual: "Manuell"
-        default: "\(rawValue) s"
+        case .manual: String(localized: "Manual")
+        default: String(localized: "\(rawValue) s")
         }
     }
 
     var menuLabel: String {
         switch self {
-        case .manual: "Manuell"
-        case .sixtySeconds: "Jede Minute"
-        default: "Alle \(rawValue) Sekunden"
+        case .manual: String(localized: "Manual")
+        case .sixtySeconds: String(localized: "Every minute")
+        default: String(localized: "Every \(rawValue) seconds")
         }
     }
 
     var longLabel: String {
         switch self {
-        case .manual: "manuell"
-        default: "alle \(rawValue) s"
+        case .manual: String(localized: "manual")
+        default: String(localized: "every \(rawValue) s")
         }
     }
 }

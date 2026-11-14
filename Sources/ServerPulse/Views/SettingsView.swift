@@ -30,10 +30,10 @@ struct SettingsView: View {
 
     private var sidebar: some View {
         List(selection: $pane) {
-            SidebarRow(title: "Allgemein", symbol: "gearshape.fill", color: .gray)
+            SidebarRow(title: String(localized: "General"), symbol: "gearshape.fill", color: .gray)
                 .tag(SettingsPane.general)
 
-            Section("Server") {
+            Section("Servers") {
                 ForEach(store.hosts) { host in
                     SidebarRow(
                         title: host.displayName,
@@ -45,7 +45,7 @@ struct SettingsView: View {
                     .tag(SettingsPane.host(host.id))
                 }
                 if pane == .newHost {
-                    SidebarRow(title: "Neuer Server", subtitle: "Nicht gesichert", symbol: "plus", color: .green)
+                    SidebarRow(title: String(localized: "New Server"), subtitle: String(localized: "Not saved"), symbol: "plus", color: .green)
                         .tag(SettingsPane.newHost)
                 }
             }
@@ -57,7 +57,7 @@ struct SettingsView: View {
                     newHostTemplate = .newDraft()
                     pane = .newHost
                 } label: {
-                    Label("Server hinzufügen", systemImage: "plus.circle.fill")
+                    Label("Add Server", systemImage: "plus.circle.fill")
                         .font(.system(size: 12.5, weight: .medium))
                 }
                 .buttonStyle(.borderless)
@@ -153,19 +153,19 @@ private struct GeneralSettingsPane: View {
                 PaneHeader(
                     symbol: "gearshape.fill",
                     color: .gray,
-                    title: "Allgemein",
-                    subtitle: "Aktualisierung und Überblick"
+                    title: String(localized: "General"),
+                    subtitle: String(localized: "Refresh and overview")
                 )
             }
 
             Section {
-                Picker("Automatisch aktualisieren", selection: intervalBinding) {
+                Picker("Refresh automatically", selection: intervalBinding) {
                     ForEach(RefreshInterval.allCases) { interval in
                         Text(interval.menuLabel).tag(interval)
                     }
                 }
             } header: {
-                Text("Aktualisierung")
+                Text("Refresh")
             } footer: {
                 Text(intervalFooter)
                     .font(.caption)
@@ -178,17 +178,17 @@ private struct GeneralSettingsPane: View {
                 }
             }
 
-            Section("Überblick") {
-                LabeledContent("Überwachte Server", value: "\(monitor.enabledHosts.count) von \(store.hosts.count)")
+            Section("Overview") {
+                LabeledContent("Monitored servers", value: String(localized: "\(monitor.enabledHosts.count) of \(store.hosts.count)"))
                 LabeledContent(
-                    "Container",
-                    value: "\(monitor.containerTotals.running) laufend, \(monitor.containerTotals.stopped) gestoppt"
+                    "Containers",
+                    value: String(localized: "\(monitor.containerTotals.running) running, \(monitor.containerTotals.stopped) stopped")
                 )
                 LabeledContent("Version", value: appVersion)
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Allgemein")
+        .navigationTitle("General")
     }
 
     private var intervalBinding: Binding<RefreshInterval> {
@@ -204,9 +204,9 @@ private struct GeneralSettingsPane: View {
 
     private var intervalFooter: String {
         if store.refreshInterval == .manual {
-            return "Daten werden nur über ↻ im Menü oder mit ⌘R aktualisiert."
+            return String(localized: "Data is only refreshed with ↻ in the menu or ⌘R.")
         }
-        return "ServerPulse fragt alle aktiven Server \(store.refreshInterval.longLabel) per SSH ab."
+        return String(localized: "ServerPulse queries all active servers \(store.refreshInterval.longLabel) over SSH.")
     }
 
     private var appVersion: String {
@@ -250,40 +250,40 @@ private struct HostSettingsPane: View {
                 PaneHeader(
                     symbol: "server.rack",
                     color: draft.isEnabled ? .blue : .gray,
-                    title: isNew && draft.hostname.isEmpty ? "Neuer Server" : draft.displayName,
-                    subtitle: draft.hostname.isEmpty ? "Verbindung per SSH-Key" : "\(draft.destination) · Port \(String(draft.port))"
+                    title: isNew && draft.hostname.isEmpty ? String(localized: "New Server") : draft.displayName,
+                    subtitle: draft.hostname.isEmpty ? String(localized: "Connection via SSH key") : "\(draft.destination) · Port \(String(draft.port))"
                 ) {
                     if !isNew { connectionPill }
                 }
             }
 
             Section {
-                TextField("Name", text: $draft.name, prompt: Text("z. B. UGREEN NAS"))
-                TextField("Hostname oder IP", text: $draft.hostname, prompt: Text("192.168.1.100"))
-                TextField("SSH-Port", value: $draft.port, format: .number.grouping(.never))
-                TextField("Benutzer", text: $draft.username, prompt: Text("admin"))
+                TextField("Name", text: $draft.name, prompt: Text("e.g. UGREEN NAS"))
+                TextField("Hostname or IP", text: $draft.hostname, prompt: Text(verbatim: "192.168.1.100"))
+                TextField("SSH Port", value: $draft.port, format: .number.grouping(.never))
+                TextField("User", text: $draft.username, prompt: Text(verbatim: "admin"))
             } header: {
-                Text("Verbindung")
+                Text("Connection")
             }
 
             Section {
                 HStack {
-                    TextField("Privater Schlüssel", text: keyPathBinding, prompt: Text("~/.ssh/id_ed25519"))
-                    Button("Auswählen …", action: chooseKey)
+                    TextField("Private key", text: keyPathBinding, prompt: Text(verbatim: "~/.ssh/id_ed25519"))
+                    Button("Choose …", action: chooseKey)
                 }
             } header: {
-                Text("Authentifizierung")
+                Text("Authentication")
             } footer: {
-                Text("Leer lassen, um ~/.ssh/config und den ssh-agent zu nutzen. Passwort-Login wird nicht unterstützt.")
+                Text("Leave empty to use ~/.ssh/config and the ssh-agent. Password login is not supported.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Section {
-                Toggle("In der Menüleiste überwachen", isOn: $draft.isEnabled)
+                Toggle("Monitor in the menu bar", isOn: $draft.isEnabled)
             } header: {
-                Text("Überwachung")
+                Text("Monitoring")
             }
 
             Section {
@@ -291,13 +291,13 @@ private struct HostSettingsPane: View {
                     Button {
                         runTest()
                     } label: {
-                        Label("Verbindung testen", systemImage: "bolt.horizontal.circle")
+                        Label("Test Connection", systemImage: "bolt.horizontal.circle")
                     }
                     .disabled(isTesting || draft.validationError != nil)
                     if isTesting {
                         ProgressView()
                             .controlSize(.small)
-                        Text("Verbinde …")
+                        Text("Connecting …")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
@@ -307,19 +307,19 @@ private struct HostSettingsPane: View {
                     TestResultRow(result: testResult)
                 }
             } header: {
-                Text("Verbindungstest")
+                Text("Connection Test")
             }
 
             if !isNew {
                 Section {
-                    Button("Server entfernen …", role: .destructive) {
+                    Button("Remove Server …", role: .destructive) {
                         confirmDelete = true
                     }
                 }
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(isNew ? "Neuer Server" : draft.displayName)
+        .navigationTitle(isNew ? String(localized: "New Server") : draft.displayName)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if hasChanges {
                 saveBar
@@ -329,14 +329,14 @@ private struct HostSettingsPane: View {
         .animation(.easeInOut(duration: 0.2), value: hasChanges)
         .animation(.easeInOut(duration: 0.2), value: testResult)
         .confirmationDialog(
-            "„\(draft.displayName)“ entfernen?",
+            "Remove “\(draft.displayName)”?",
             isPresented: $confirmDelete,
             titleVisibility: .visible
         ) {
-            Button("Entfernen", role: .destructive, action: delete)
-            Button("Abbrechen", role: .cancel) {}
+            Button("Remove", role: .destructive, action: delete)
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Der Server wird aus ServerPulse entfernt. Auf dem Server selbst wird nichts verändert.")
+            Text("The server is removed from ServerPulse. Nothing is changed on the server itself.")
         }
     }
 
@@ -344,13 +344,13 @@ private struct HostSettingsPane: View {
 
     private var connectionPill: some View {
         let status = monitor.status(for: draft.id)
-        if !draft.isEnabled { return StatusPill(text: "Deaktiviert", color: .gray) }
-        if status.errorMessage != nil { return StatusPill(text: "Nicht erreichbar", color: .red) }
-        if status.snapshot == nil { return StatusPill(text: "Nicht geprüft", color: .gray) }
+        if !draft.isEnabled { return StatusPill(text: String(localized: "Disabled"), color: .gray) }
+        if status.errorMessage != nil { return StatusPill(text: String(localized: "Unreachable"), color: .red) }
+        if status.snapshot == nil { return StatusPill(text: String(localized: "Not checked"), color: .gray) }
         let issues = monitor.issueCount(for: draft.id)
         return issues == 0
-            ? StatusPill(text: "Verbunden", color: .green)
-            : StatusPill(text: issues == 1 ? "1 Hinweis" : "\(issues) Hinweise", color: .orange)
+            ? StatusPill(text: String(localized: "Connected"), color: .green)
+            : StatusPill(text: issues == 1 ? String(localized: "1 issue") : String(localized: "\(issues) issues"), color: .orange)
     }
 
     private var saveBar: some View {
@@ -361,12 +361,12 @@ private struct HostSettingsPane: View {
                     Label(problem, systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 } else {
-                    Text(isNew ? "Neuer Server – noch nicht gesichert" : "Ungesicherte Änderungen")
+                    Text(isNew ? String(localized: "New server – not saved yet") : String(localized: "Unsaved changes"))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(isNew ? "Abbrechen" : "Verwerfen", action: revert)
-                Button("Sichern", action: save)
+                Button(isNew ? String(localized: "Cancel") : String(localized: "Discard"), action: revert)
+                Button("Save", action: save)
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
                     .disabled(draft.validationError != nil)
@@ -439,8 +439,8 @@ private struct HostSettingsPane: View {
 
     private func chooseKey() {
         let panel = NSOpenPanel()
-        panel.title = "Privaten SSH-Schlüssel auswählen"
-        panel.prompt = "Auswählen"
+        panel.title = String(localized: "Choose private SSH key")
+        panel.prompt = String(localized: "Choose")
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false

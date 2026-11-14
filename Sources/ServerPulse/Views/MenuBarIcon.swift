@@ -6,6 +6,6 @@ struct MenuBarIcon: View {
 
     var body: some View {
         Image(systemName: monitor.isHealthy ? "server.rack" : "exclamationmark.triangle.fill")
-            .accessibilityLabel(monitor.isHealthy ? "ServerPulse – alles in Ordnung" : "ServerPulse – Warnung")
+            .accessibilityLabel(monitor.isHealthy ? String(localized: "ServerPulse – all good") : String(localized: "ServerPulse – warning"))
     }
 }

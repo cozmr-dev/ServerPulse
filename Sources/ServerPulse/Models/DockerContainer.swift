@@ -57,11 +57,21 @@ enum ContainerAction: String, Sendable {
     case stop
     case restart
 
-    var pastTense: String {
+    /// Erfolgsmeldung für einen einzelnen Container.
+    func successMessage(for name: String) -> String {
         switch self {
-        case .start: "gestartet"
-        case .stop: "gestoppt"
-        case .restart: "neu gestartet"
+        case .start: String(localized: "“\(name)” was started.")
+        case .stop: String(localized: "“\(name)” was stopped.")
+        case .restart: String(localized: "“\(name)” was restarted.")
+        }
+    }
+
+    /// Erfolgsmeldung für ein ganzes Compose-Projekt.
+    func successMessage(forProject name: String, count: Int) -> String {
+        switch self {
+        case .start: String(localized: "“\(name)” was started (\(count) containers).")
+        case .stop: String(localized: "“\(name)” was stopped (\(count) containers).")
+        case .restart: String(localized: "“\(name)” was restarted (\(count) containers).")
         }
     }
 }
@@ -89,9 +99,9 @@ extension DockerContainer {
         return withoutDigest.split(separator: "/").last.map(String.init) ?? withoutDigest
     }
 
-    /// Docker-Status auf Deutsch, z. B. „Läuft seit 3 Tagen“ statt „Up 3 days (healthy)“.
+    /// Docker-Status in der App-Sprache, z. B. „Running for 3 days“ bzw. „Läuft seit 3 Tagen“.
     var localizedStatus: String {
-        if state == "paused" { return "Pausiert" }
+        if state == "paused" { return String(localized: "Paused") }
         var text = status
         for marker in ["(healthy)", "(unhealthy)", "(health: starting)", "(Paused)"] {
             text = text.replacingOccurrences(of: marker, with: "")
@@ -99,7 +109,8 @@ extension DockerContainer {
         text = text.trimmingCharacters(in: .whitespaces)
 
         if text.hasPrefix("Up ") {
-            return "Läuft seit " + Self.germanDuration(String(text.dropFirst(3)))
+            let duration = Self.localizedDuration(String(text.dropFirst(3)))
+            return String(localized: "Running for \(duration)")
         }
         if text.hasPrefix("Exited") {
             var rest = text
@@ -108,14 +119,24 @@ extension DockerContainer {
             }
             rest = rest.trimmingCharacters(in: .whitespaces)
             if rest.hasSuffix(" ago") { rest = String(rest.dropLast(4)) }
-            let code = exitCode.map { " · Code \($0)" } ?? ""
-            return "Beendet vor " + Self.germanDuration(rest) + code
+            let duration = Self.localizedDuration(rest)
+            let exited = String(localized: "Exited \(duration) ago")
+            guard let code = exitCode else { return exited }
+            return exited + String(localized: " · code \(code)")
         }
-        if text.hasPrefix("Restarting") { return "Startet neu …" }
-        if text.hasPrefix("Created") { return "Erstellt, nie gestartet" }
-        if text.hasPrefix("Removal") { return "Wird entfernt" }
-        if text.hasPrefix("Dead") { return "Defekt" }
+        if text.hasPrefix("Restarting") { return String(localized: "Restarting …") }
+        if text.hasPrefix("Created") { return String(localized: "Created, never started") }
+        if text.hasPrefix("Removal") { return String(localized: "Being removed") }
+        if text.hasPrefix("Dead") { return String(localized: "Dead") }
         return text
+    }
+
+    /// Docker-Zeitangabe (go-units HumanDuration, z. B. „About an hour“) in der App-Sprache.
+    static func localizedDuration(_ english: String) -> String {
+        if AppLanguage.isGerman { return germanDuration(english) }
+        let trimmed = english.trimmingCharacters(in: .whitespaces)
+        guard let first = trimmed.first else { return trimmed }
+        return first.lowercased() + trimmed.dropFirst()
     }
 
     /// Übersetzt Docker-Zeitangaben (go-units HumanDuration) in den deutschen Dativ.

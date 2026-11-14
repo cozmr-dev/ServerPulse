@@ -39,10 +39,10 @@ struct LogView: View {
 
             Spacer(minLength: 12)
 
-            SearchField(text: $filter, prompt: "Logs filtern")
+            SearchField(text: $filter, prompt: String(localized: "Filter logs"))
                 .frame(width: 180)
 
-            Picker("Zeilen", selection: $model.lineCount) {
+            Picker("Lines", selection: $model.lineCount) {
                 ForEach(Self.lineOptions, id: \.self) { count in
                     Text("\(count)").tag(count)
                 }
@@ -50,12 +50,12 @@ struct LogView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .fixedSize()
-            .help("Anzahl der geladenen Zeilen")
+            .help("Number of lines to load")
             .onChange(of: model.lineCount) {
                 Task { await model.load() }
             }
 
-            CircleIconButton(systemImage: "arrow.clockwise", help: "Neu laden (⌘R)") {
+            CircleIconButton(systemImage: "arrow.clockwise", help: String(localized: "Reload (⌘R)")) {
                 Task { await model.load() }
             }
             .disabled(model.isLoading)
@@ -63,7 +63,7 @@ struct LogView: View {
 
             CircleIconButton(
                 systemImage: didCopy ? "checkmark" : "doc.on.doc",
-                help: "In die Zwischenablage kopieren",
+                help: String(localized: "Copy to clipboard"),
                 tint: didCopy ? .green : .primary
             ) {
                 copyLogs()
@@ -83,9 +83,9 @@ struct LogView: View {
             VStack {
                 StatusBanner(
                     style: .error,
-                    title: "Logs konnten nicht geladen werden",
+                    title: String(localized: "Logs could not be loaded"),
                     message: error,
-                    actionTitle: "Erneut versuchen",
+                    actionTitle: String(localized: "Try again"),
                     action: { Task { await model.load() } }
                 )
                 .padding(16)
@@ -93,7 +93,7 @@ struct LogView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if model.text.isEmpty && model.isLoading {
-            ProgressView("Lade Logs …")
+            ProgressView("Loading logs …")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollViewReader { proxy in
@@ -132,7 +132,7 @@ struct LogView: View {
             Text(lineSummary)
             Spacer()
             if let loadedAt = model.loadedAt {
-                Text("Stand \(loadedAt.formatted(date: .omitted, time: .standard))")
+                Text("As of \(loadedAt.formatted(date: .omitted, time: .standard))")
             }
         }
         .font(.system(size: 11))
@@ -151,15 +151,15 @@ struct LogView: View {
         let matches = model.text
             .split(separator: "\n", omittingEmptySubsequences: false)
             .filter { $0.localizedCaseInsensitiveContains(query) }
-        return matches.isEmpty ? "Keine Zeilen enthalten „\(query)“." : matches.joined(separator: "\n")
+        return matches.isEmpty ? String(localized: "No lines contain “\(query)”.") : matches.joined(separator: "\n")
     }
 
     private var lineSummary: String {
         let total = model.text.isEmpty ? 0 : model.text.split(separator: "\n").count
         let query = filter.trimmingCharacters(in: .whitespaces)
-        guard !query.isEmpty else { return "\(total) Zeilen" }
+        guard !query.isEmpty else { return String(localized: "\(total) lines") }
         let shown = model.text.split(separator: "\n").filter { $0.localizedCaseInsensitiveContains(query) }.count
-        return "\(shown) von \(total) Zeilen"
+        return String(localized: "\(shown) of \(total) lines")
     }
 
     private func copyLogs() {

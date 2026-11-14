@@ -53,21 +53,21 @@ struct ServerHost: Identifiable, Codable, Hashable, Sendable {
     var validationError: String? {
         let host = hostname.trimmingCharacters(in: .whitespacesAndNewlines)
         let user = username.trimmingCharacters(in: .whitespacesAndNewlines)
-        if host.isEmpty { return "Bitte einen Hostnamen oder eine IP-Adresse eingeben." }
+        if host.isEmpty { return String(localized: "Please enter a hostname or IP address.") }
         if host.hasPrefix("-") || host.contains(where: { $0.isWhitespace || $0 == "@" }) {
-            return "Der Hostname enthält ungültige Zeichen."
+            return String(localized: "The hostname contains invalid characters.")
         }
-        if user.isEmpty { return "Bitte einen SSH-Benutzer eingeben." }
+        if user.isEmpty { return String(localized: "Please enter an SSH user.") }
         if user.hasPrefix("-") || user.contains(where: { $0.isWhitespace || $0 == "@" }) {
-            return "Der SSH-Benutzer enthält ungültige Zeichen."
+            return String(localized: "The SSH user contains invalid characters.")
         }
-        if !(1...65_535).contains(port) { return "Der SSH-Port muss zwischen 1 und 65535 liegen." }
+        if !(1...65_535).contains(port) { return String(localized: "The SSH port must be between 1 and 65535.") }
         return nil
     }
 
     /// Vorlage für einen neu anzulegenden Host.
     static func newDraft() -> ServerHost {
-        ServerHost(name: "Neuer Server", hostname: "", port: 22, username: "", privateKeyPath: "~/.ssh/id_ed25519")
+        ServerHost(name: String(localized: "New Server"), hostname: "", port: 22, username: "", privateKeyPath: "~/.ssh/id_ed25519")
     }
 
     /// Beispiel-Eintrag für den allerersten Start.

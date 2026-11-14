@@ -11,14 +11,14 @@ struct ContainerListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Container")
+                Text("Containers")
                     .font(.system(size: 14, weight: .semibold))
                 Spacer()
                 if snapshot.docker == .available {
                     HStack(spacing: 8) {
-                        countLabel(running.count, "aktiv", color: .green)
+                        countLabel(running.count, String(localized: "running"), color: .green)
                         if !stopped.isEmpty {
-                            countLabel(stopped.count, "gestoppt", color: .secondary)
+                            countLabel(stopped.count, String(localized: "stopped"), color: .secondary)
                         }
                     }
                 }
@@ -28,25 +28,25 @@ struct ContainerListView: View {
             switch snapshot.docker {
             case .available:
                 if snapshot.containers.isEmpty {
-                    placeholder(symbol: "shippingbox", text: "Keine Container vorhanden")
+                    placeholder(symbol: "shippingbox", text: String(localized: "No containers"))
                 } else {
-                    SearchField(text: $searchText, prompt: "Container suchen")
+                    SearchField(text: $searchText, prompt: String(localized: "Search containers"))
                     sections
                 }
             case .notInstalled:
                 StatusBanner(
                     style: .info,
-                    title: "Docker wurde nicht gefunden",
+                    title: String(localized: "Docker was not found"),
                     message: SSHError.dockerNotFound.recoverySuggestion
                 )
             case .permissionDenied(let detail):
                 StatusBanner(
                     style: .warning,
-                    title: "Keine Berechtigung für Docker",
+                    title: String(localized: "No permission for Docker"),
                     message: "\(detail)\n\(SSHError.dockerPermissionDenied(detail).recoverySuggestion ?? "")"
                 )
             case .error(let detail):
-                StatusBanner(style: .warning, title: "Docker-Fehler", message: detail)
+                StatusBanner(style: .warning, title: String(localized: "Docker error"), message: detail)
             }
         }
     }
@@ -60,13 +60,13 @@ struct ContainerListView: View {
         let inactive = groups.filter { !$0.isRunning }
 
         if groups.isEmpty {
-            placeholder(symbol: "magnifyingglass", text: "Keine Treffer für „\(searchText)“")
+            placeholder(symbol: "magnifyingglass", text: String(localized: "No results for “\(searchText)”"))
         }
         if !active.isEmpty {
-            section(title: "Laufend", groups: active)
+            section(title: String(localized: "Running"), groups: active)
         }
         if !inactive.isEmpty {
-            section(title: "Gestoppt", groups: inactive)
+            section(title: String(localized: "Stopped"), groups: inactive)
         }
     }
 
@@ -268,7 +268,7 @@ struct ProjectGroupView: View {
             }
         }
         .contextMenu { groupMenuItems }
-        .help(expanded ? "Zuklappen" : "Aufklappen")
+        .help(expanded ? String(localized: "Collapse") : String(localized: "Expand"))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -299,21 +299,21 @@ struct ProjectGroupView: View {
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
         .fixedSize()
-        .help("Aktionen für das ganze Projekt")
+        .help("Actions for the whole project")
     }
 
     @ViewBuilder
     private var groupMenuItems: some View {
-        Button("Alle neu starten", systemImage: "arrow.clockwise") {
+        Button("Restart all", systemImage: "arrow.clockwise") {
             monitor.perform(.restart, on: group, host: host)
         }
         if group.runningCount < group.containers.count {
-            Button("Alle starten", systemImage: "play.fill") {
+            Button("Start all", systemImage: "play.fill") {
                 monitor.perform(.start, on: group, host: host)
             }
         }
         if group.isRunning {
-            Button("Alle stoppen", systemImage: "stop.fill") {
+            Button("Stop all", systemImage: "stop.fill") {
                 monitor.perform(.stop, on: group, host: host)
             }
         }
@@ -330,11 +330,11 @@ struct ProjectGroupView: View {
     private var summary: String {
         let total = group.containers.count
         if group.needsAttention {
-            return group.attentionCount == 1 ? "1 Container mit Problem" : "\(group.attentionCount) Container mit Problemen"
+            return group.attentionCount == 1 ? String(localized: "1 container with a problem") : String(localized: "\(group.attentionCount) containers with problems")
         }
-        if group.allRunning { return "\(total) Container · alle laufen" }
-        if group.isRunning { return "\(group.runningCount) von \(total) laufen" }
-        return "\(total) Container · gestoppt"
+        if group.allRunning { return String(localized: "\(total) containers · all running") }
+        if group.isRunning { return String(localized: "\(group.runningCount) of \(total) running") }
+        return String(localized: "\(total) containers · stopped")
     }
 
     private var summaryStyle: AnyShapeStyle {
@@ -406,18 +406,18 @@ struct ContainerRowView: View {
     @ViewBuilder
     private var healthBadge: some View {
         if container.needsAttention && !container.isRunning {
-            StatusPill(text: "Fehler", color: .red)
+            StatusPill(text: String(localized: "Error"), color: .red)
         } else {
             switch container.health {
             case .unhealthy:
-                StatusPill(text: "Unhealthy", color: .orange)
+                StatusPill(text: String(localized: "Unhealthy"), color: .orange)
             case .starting:
-                StatusPill(text: "Startet", color: .blue)
+                StatusPill(text: String(localized: "Starting"), color: .blue)
             case .healthy:
                 Image(systemName: "heart.fill")
                     .font(.system(size: 10))
                     .foregroundStyle(.green.opacity(0.75))
-                    .help("Health-Check: gesund")
+                    .help("Health check: healthy")
             case .none:
                 EmptyView()
             }
@@ -426,19 +426,19 @@ struct ContainerRowView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 5) {
-            CircleIconButton(systemImage: "arrow.clockwise", help: "Neu starten", size: 24) {
+            CircleIconButton(systemImage: "arrow.clockwise", help: String(localized: "Restart"), size: 24) {
                 monitor.perform(.restart, on: container, host: host)
             }
             if container.isRunning {
-                CircleIconButton(systemImage: "stop.fill", help: "Stoppen", size: 24) {
+                CircleIconButton(systemImage: "stop.fill", help: String(localized: "Stop"), size: 24) {
                     monitor.perform(.stop, on: container, host: host)
                 }
             } else {
-                CircleIconButton(systemImage: "play.fill", help: "Starten", size: 24, tint: .green) {
+                CircleIconButton(systemImage: "play.fill", help: String(localized: "Start"), size: 24, tint: .green) {
                     monitor.perform(.start, on: container, host: host)
                 }
             }
-            CircleIconButton(systemImage: "text.alignleft", help: "Logs anzeigen", size: 24) {
+            CircleIconButton(systemImage: "text.alignleft", help: String(localized: "Show logs"), size: 24) {
                 showLogs()
             }
         }
@@ -446,23 +446,23 @@ struct ContainerRowView: View {
 
     @ViewBuilder
     private var contextMenuItems: some View {
-        Button("Neu starten", systemImage: "arrow.clockwise") {
+        Button("Restart", systemImage: "arrow.clockwise") {
             monitor.perform(.restart, on: container, host: host)
         }
         if container.isRunning {
-            Button("Stoppen", systemImage: "stop.fill") {
+            Button("Stop", systemImage: "stop.fill") {
                 monitor.perform(.stop, on: container, host: host)
             }
         } else {
-            Button("Starten", systemImage: "play.fill") {
+            Button("Start", systemImage: "play.fill") {
                 monitor.perform(.start, on: container, host: host)
             }
         }
         Divider()
-        Button("Logs anzeigen", systemImage: "text.alignleft") {
+        Button("Show logs", systemImage: "text.alignleft") {
             showLogs()
         }
-        Button("Container-ID kopieren", systemImage: "doc.on.doc") {
+        Button("Copy container ID", systemImage: "doc.on.doc") {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(container.id, forType: .string)
         }

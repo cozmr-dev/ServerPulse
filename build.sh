@@ -36,6 +36,9 @@ mkdir -p "${APP_DIR}/Contents/MacOS" "${APP_DIR}/Contents/Resources"
 lipo -create "${SLICES[@]}" -output "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 cp "$SOURCE_PLIST" "${APP_DIR}/Contents/Info.plist"
 cp Resources/AppIcon.icns "${APP_DIR}/Contents/Resources/AppIcon.icns"
+for lproj in Resources/*.lproj; do
+    cp -R "$lproj" "${APP_DIR}/Contents/Resources/"
+done
 printf 'APPL????' > "${APP_DIR}/Contents/PkgInfo"
 $PLISTBUDDY -c "Set :CFBundleShortVersionString ${VERSION}" "${APP_DIR}/Contents/Info.plist"
 $PLISTBUDDY -c "Set :CFBundleVersion ${BUILD_NUMBER}" "${APP_DIR}/Contents/Info.plist"

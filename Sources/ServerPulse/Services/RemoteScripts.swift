@@ -11,7 +11,7 @@ enum RemoteScripts {
     static let status = [
         "export LC_ALL=C",
         #"PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin""#,
-        "echo @@CPU; head -n1 /proc/stat; sleep 1; head -n1 /proc/stat",
+        "echo @@CPU; head -n1 /proc/stat; sleep 0.5 2>/dev/null || sleep 1; head -n1 /proc/stat",
         "echo @@NPROC; nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo",
         "echo @@LOAD; cat /proc/loadavg",
         "echo @@MEM; grep -E '^(MemTotal|MemAvailable):' /proc/meminfo",

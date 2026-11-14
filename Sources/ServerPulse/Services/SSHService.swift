@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// Fragt Hosts per `/usr/bin/ssh` ab und steuert Docker-Container.
@@ -59,31 +60,31 @@ struct SSHService: Sendable {
     func testConnection(_ host: ServerHost) async -> ConnectionTestResult {
         do {
             let snapshot = try await fetchStatus(for: host)
-            let uptime = snapshot.stats.uptime.map { " · Uptime \(Format.uptime($0))" } ?? ""
-            let base = "Verbunden mit \(host.destination)\(uptime)."
+            let uptime = snapshot.stats.uptime.map { String(localized: " · Uptime \(Format.uptime($0))") } ?? ""
+            let base = String(localized: "Connected to \(host.destination)\(uptime).")
             switch snapshot.docker {
             case .available:
                 return ConnectionTestResult(
                     level: .success,
-                    title: "Verbindung erfolgreich",
-                    detail: "\(base) Docker verfügbar – \(snapshot.containers.count) Container gefunden."
+                    title: String(localized: "Connection successful"),
+                    detail: String(localized: "\(base) Docker available – \(snapshot.containers.count) containers found.")
                 )
             case .notInstalled:
                 return ConnectionTestResult(
                     level: .warning,
-                    title: "Verbunden – Docker nicht gefunden",
-                    detail: "\(base) Docker liegt weder im PATH noch unter /usr/bin oder /usr/local/bin."
+                    title: String(localized: "Connected – Docker not found"),
+                    detail: String(localized: "\(base) Docker is neither in PATH nor in /usr/bin or /usr/local/bin.")
                 )
             case .permissionDenied(let detail):
                 return ConnectionTestResult(
                     level: .warning,
-                    title: "Verbunden – keine Docker-Rechte",
+                    title: String(localized: "Connected – no Docker permission"),
                     detail: "\(base) \(detail)\n\(SSHError.dockerPermissionDenied(detail).recoverySuggestion ?? "")"
                 )
             case .error(let detail):
                 return ConnectionTestResult(
                     level: .warning,
-                    title: "Verbunden – Docker-Fehler",
+                    title: String(localized: "Connected – Docker error"),
                     detail: "\(base) \(detail)"
                 )
             }
@@ -92,7 +93,7 @@ struct SSHService: Sendable {
             let suggestion = sshError?.recoverySuggestion.map { "\n\($0)" } ?? ""
             return ConnectionTestResult(
                 level: .failure,
-                title: "Verbindung fehlgeschlagen",
+                title: String(localized: "Connection failed"),
                 detail: error.localizedDescription + suggestion
             )
         }
@@ -119,7 +120,7 @@ struct SSHService: Sendable {
         guard result.exitCode != 0 else { return }
         let output = [result.stderr, result.stdout]
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .first { !$0.isEmpty } ?? "Exit-Code \(result.exitCode)"
+            .first { !$0.isEmpty } ?? String(localized: "Exit code \(result.exitCode)")
         if result.exitCode == 127 { throw SSHError.dockerNotFound }
         if output.localizedCaseInsensitiveContains("permission denied") {
             throw SSHError.dockerPermissionDenied(output)
@@ -140,6 +141,43 @@ struct SSHService: Sendable {
         return result
     }
 
+    // MARK: Verbindungs-Wiederverwendung (ControlMaster)
+
+    /// Wie lange eine Hintergrund-Verbindung nach der letzten Abfrage offen bleibt.
+    private static let controlPersistSeconds = 60
+
+    /// Hält pro Server eine SSH-Verbindung im Hintergrund offen und nutzt sie für weitere Abfragen.
+    /// Bricht die Verbindung ab (Neustart, Netzwerk), baut ssh beim nächsten Aufruf automatisch eine neue auf.
+    private func multiplexingArguments(for host: ServerHost) -> [String] {
+        guard let socket = Self.controlSocketPath(for: host) else { return [] }
+        return [
+            "-o", "ControlMaster=auto",
+            "-o", "ControlPath=\(socket)",
+            "-o", "ControlPersist=\(Self.controlPersistSeconds)"
+        ]
+    }
+
+    /// Kurzer, privater Socket-Pfad pro Kombination aus Benutzer, Host, Port und Schlüssel.
+    /// Unix-Sockets dürfen höchstens 104 Zeichen lang sein (ssh hängt beim Anlegen noch 17 an).
+    private static func controlSocketPath(for host: ServerHost) -> String? {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            .appendingPathComponent("sp", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true,
+                attributes: [.posixPermissions: 0o700]
+            )
+        } catch {
+            return nil
+        }
+        let identity = "\(host.destination):\(host.port):\(host.expandedKeyPath ?? "")"
+        let digest = SHA256.hash(data: Data(identity.utf8))
+        let name = digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        let path = directory.appendingPathComponent(name).path
+        return path.utf8.count + 17 < 104 ? path : nil
+    }
+
     private func sshArguments(for host: ServerHost) throws -> [String] {
         if let problem = host.validationError {
             throw SSHError.invalidConfiguration(problem)
@@ -154,6 +192,7 @@ struct SSHService: Sendable {
             "-o", "LogLevel=ERROR",
             "-p", String(host.port)
         ]
+        arguments += multiplexingArguments(for: host)
 
         if let keyPath = host.expandedKeyPath {
             let fileManager = FileManager.default
@@ -161,7 +200,7 @@ struct SSHService: Sendable {
                 throw SSHError.keyNotFound(keyPath)
             }
             guard fileManager.isReadableFile(atPath: keyPath) else {
-                throw SSHError.keyNotReadable("Keine Leserechte für \(keyPath).")
+                throw SSHError.keyNotReadable(String(localized: "No read permission for \(keyPath)."))
             }
             arguments += ["-i", keyPath, "-o", "IdentitiesOnly=yes"]
         }

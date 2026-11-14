@@ -24,7 +24,7 @@ enum StatusParser {
         guard sections["MEM"] != nil, sections["UPTIME"] != nil else {
             let preview = output.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160)
             throw SSHError.unexpectedOutput(
-                preview.isEmpty ? "Keine Daten erhalten – handelt es sich um ein Linux-System?" : String(preview)
+                preview.isEmpty ? String(localized: "No data received – is this a Linux system?") : String(preview)
             )
         }
 
@@ -120,7 +120,7 @@ enum StatusParser {
 
         guard returnCode == 0 else {
             let message = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-            let detail = message.isEmpty ? "Docker meldete Exit-Code \(returnCode.map(String.init) ?? "?")." : message
+            let detail = message.isEmpty ? String(localized: "Docker reported exit code \(returnCode.map(String.init) ?? "?").") : message
             if message.localizedCaseInsensitiveContains("permission denied") {
                 return ([], .permissionDenied(detail))
             }

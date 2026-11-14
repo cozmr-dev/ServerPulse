@@ -50,11 +50,11 @@ struct MenuContentView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("Keine aktiven Server", systemImage: "server.rack")
+            Label("No active servers", systemImage: "server.rack")
         } description: {
-            Text("Füge in den Einstellungen einen Server hinzu oder aktiviere einen bestehenden.")
+            Text("Add a server in Settings or enable an existing one.")
         } actions: {
-            Button("Einstellungen öffnen") {
+            Button("Open Settings") {
                 WindowPresenter.shared.showSettings(store: store, monitor: monitor)
             }
             .buttonStyle(.borderedProminent)
@@ -92,7 +92,7 @@ struct HeaderView: View {
             Spacer()
 
             ZStack {
-                CircleIconButton(systemImage: "arrow.clockwise", help: "Jetzt aktualisieren (⌘R)") {
+                CircleIconButton(systemImage: "arrow.clockwise", help: String(localized: "Refresh now (⌘R)")) {
                     Task { await monitor.refreshAll() }
                 }
                 .opacity(monitor.isRefreshing ? 0 : 1)
@@ -107,7 +107,7 @@ struct HeaderView: View {
                 }
             }
 
-            CircleIconButton(systemImage: "gearshape.fill", help: "Einstellungen (⌘,)") {
+            CircleIconButton(systemImage: "gearshape.fill", help: String(localized: "Settings (⌘,)")) {
                 WindowPresenter.shared.showSettings(store: store, monitor: monitor)
             }
             .keyboardShortcut(",")
@@ -121,11 +121,11 @@ struct HeaderView: View {
 
     private var summaryText: String {
         guard let date = monitor.lastRefresh else {
-            return monitor.isRefreshing ? "Verbinde …" : "Noch nicht aktualisiert"
+            return monitor.isRefreshing ? String(localized: "Connecting …") : String(localized: "Not refreshed yet")
         }
         let time = date.formatted(date: .omitted, time: .standard)
         let issues = monitor.issueCount
-        let state = issues == 0 ? "Alles in Ordnung" : (issues == 1 ? "1 Hinweis" : "\(issues) Hinweise")
+        let state = issues == 0 ? String(localized: "All good") : (issues == 1 ? String(localized: "1 issue") : String(localized: "\(issues) issues"))
         return "\(state) · \(time)"
     }
 }
@@ -193,7 +193,7 @@ struct HostDetailView: View {
                 if let message = monitor.actionMessage, message.isError {
                     StatusBanner(
                         style: .error,
-                        title: "Aktion fehlgeschlagen",
+                        title: String(localized: "Action failed"),
                         message: message.text,
                         onDismiss: { monitor.actionMessage = nil }
                     )
@@ -203,11 +203,11 @@ struct HostDetailView: View {
                     if let error = status.errorMessage {
                         StatusBanner(
                             style: .warning,
-                            title: "Verbindung unterbrochen",
+                            title: String(localized: "Connection lost"),
                             message: [error, status.errorSuggestion, staleHint(snapshot)]
                                 .compactMap { $0 }
                                 .joined(separator: "\n"),
-                            actionTitle: status.isLoading ? nil : "Erneut versuchen",
+                            actionTitle: status.isLoading ? nil : String(localized: "Try again"),
                             action: { Task { await monitor.refresh(host: host) } }
                         )
                     }
@@ -223,7 +223,7 @@ struct HostDetailView: View {
                 } else {
                     VStack(spacing: 12) {
                         ProgressView()
-                        Text("Verbinde mit \(host.destination) …")
+                        Text("Connecting to \(host.destination) …")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
@@ -237,7 +237,7 @@ struct HostDetailView: View {
     }
 
     private func staleHint(_ snapshot: HostSnapshot) -> String {
-        "Angezeigt werden Daten von \(snapshot.fetchedAt.formatted(date: .omitted, time: .standard))."
+        String(localized: "Showing data from \(snapshot.fetchedAt.formatted(date: .omitted, time: .standard)).")
     }
 }
 
@@ -257,7 +257,7 @@ struct ConnectionErrorView: View {
                 .font(.system(size: 36, weight: .medium))
                 .foregroundStyle(.orange)
                 .padding(.bottom, 4)
-            Text("\(host.displayName) nicht erreichbar")
+            Text("\(host.displayName) is not reachable")
                 .font(.headline)
             Text(message)
                 .font(.callout)
@@ -277,7 +277,7 @@ struct ConnectionErrorView: View {
                 if isLoading {
                     ProgressView().controlSize(.small)
                 } else {
-                    Text("Erneut versuchen")
+                    Text("Try again")
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -308,13 +308,13 @@ struct FooterView: View {
             Button {
                 NSApplication.shared.terminate(nil)
             } label: {
-                Label("Beenden", systemImage: "power")
+                Label("Quit", systemImage: "power")
                     .font(.system(size: 11.5, weight: .medium))
             }
             .buttonStyle(.borderless)
             .foregroundStyle(.secondary)
             .keyboardShortcut("q")
-            .help("ServerPulse beenden (⌘Q)")
+            .help("Quit ServerPulse (⌘Q)")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 9)
@@ -324,7 +324,7 @@ struct FooterView: View {
         let hosts = monitor.enabledHosts.count
         let totals = monitor.containerTotals
         let containers = totals.running + totals.stopped
-        let interval = store.refreshInterval == .manual ? "manuell" : store.refreshInterval.longLabel
-        return "\(hosts) Server · \(containers) Container · \(interval)"
+        let interval = store.refreshInterval.longLabel
+        return String(localized: "\(hosts) servers · \(containers) containers · \(interval)")
     }
 }

@@ -24,58 +24,58 @@ enum SSHError: LocalizedError, Sendable, Equatable {
         case .invalidConfiguration(let message):
             message
         case .keyNotFound(let path):
-            "SSH-Key nicht gefunden: \(path)"
+            String(localized: "SSH key not found: \(path)")
         case .keyNotReadable(let detail):
-            "SSH-Key kann nicht verwendet werden: \(detail)"
+            String(localized: "SSH key cannot be used: \(detail)")
         case .launchFailed(let detail):
-            "/usr/bin/ssh konnte nicht gestartet werden: \(detail)"
+            String(localized: "/usr/bin/ssh could not be started: \(detail)")
         case .timeout(let seconds):
-            "Zeitüberschreitung nach \(Int(seconds)) s – der Host antwortet nicht."
+            String(localized: "Timed out after \(Int(seconds)) s – the host is not responding.")
         case .authenticationFailed(let user):
-            "Anmeldung als „\(user)“ abgelehnt (Permission denied)."
+            String(localized: "Login as “\(user)” was rejected (Permission denied).")
         case .hostKeyMismatch(let host):
-            "Der Host-Key von \(host) hat sich geändert."
+            String(localized: "The host key of \(host) has changed.")
         case .connectionRefused(let host, let port):
-            "Verbindung zu \(host):\(port) abgelehnt."
+            String(localized: "Connection to \(host):\(String(port)) refused.")
         case .hostUnreachable(let host):
-            "\(host) ist nicht erreichbar."
+            String(localized: "\(host) is not reachable.")
         case .dnsFailure(let host):
-            "Hostname „\(host)“ konnte nicht aufgelöst werden."
+            String(localized: "Hostname “\(host)” could not be resolved.")
         case .connectionFailed(let detail):
-            "SSH-Verbindung fehlgeschlagen: \(detail)"
+            String(localized: "SSH connection failed: \(detail)")
         case .unexpectedOutput(let detail):
-            "Unerwartete Antwort vom Host: \(detail)"
+            String(localized: "Unexpected response from host: \(detail)")
         case .invalidContainerID(let id):
-            "Ungültige Container-ID: \(id)"
+            String(localized: "Invalid container ID: \(id)")
         case .dockerNotFound:
-            "Docker wurde auf dem Host nicht gefunden."
+            String(localized: "Docker was not found on the host.")
         case .dockerPermissionDenied(let detail):
-            "Keine Berechtigung für Docker: \(detail)"
+            String(localized: "No permission for Docker: \(detail)")
         case .commandFailed(let detail):
-            "Befehl fehlgeschlagen: \(detail)"
+            String(localized: "Command failed: \(detail)")
         }
     }
 
     var recoverySuggestion: String? {
         switch self {
         case .keyNotFound:
-            "Pfad in den Einstellungen prüfen oder einen Key erzeugen: ssh-keygen -t ed25519"
+            String(localized: "Check the path in Settings or create a key: ssh-keygen -t ed25519")
         case .keyNotReadable:
-            "Rechte prüfen (chmod 600 <key>). Passwortgeschützte Keys vorher mit „ssh-add --apple-use-keychain <key>“ zum ssh-agent hinzufügen."
+            String(localized: "Check the permissions (chmod 600 <key>). Add passphrase-protected keys to the ssh-agent first: ssh-add --apple-use-keychain <key>")
         case .authenticationFailed:
-            "Public Key auf dem Server hinterlegen (ssh-copy-id -i <key>.pub user@host) und prüfen, ob der Benutzer per SSH-Key anmelden darf."
+            String(localized: "Copy your public key to the server (ssh-copy-id -i <key>.pub user@host) and make sure the user may log in with an SSH key.")
         case .hostKeyMismatch(let host):
-            "Falls der Server neu installiert wurde: „ssh-keygen -R \(host)“ ausführen und erneut verbinden."
+            String(localized: "If the server was reinstalled, run “ssh-keygen -R \(host)” and connect again.")
         case .connectionRefused:
-            "Läuft der SSH-Dienst? Bei UGREEN: Systemsteuerung → Terminal → SSH aktivieren. Port prüfen."
+            String(localized: "Is the SSH service running? On UGREEN: Control Panel → Terminal → enable SSH. Check the port.")
         case .hostUnreachable, .timeout:
-            "Netzwerkverbindung, IP-Adresse und Firewall prüfen."
+            String(localized: "Check the network connection, IP address and firewall.")
         case .dnsFailure:
-            "Hostnamen prüfen oder direkt die IP-Adresse eintragen."
+            String(localized: "Check the hostname or enter the IP address directly.")
         case .dockerNotFound:
-            "Docker installieren bzw. prüfen, ob „docker“ unter /usr/bin oder /usr/local/bin liegt."
+            String(localized: "Install Docker or check that “docker” is in /usr/bin or /usr/local/bin.")
         case .dockerPermissionDenied:
-            "Benutzer zur Gruppe „docker“ hinzufügen: sudo usermod -aG docker <user> (danach neu anmelden)."
+            String(localized: "Add the user to the “docker” group: sudo usermod -aG docker <user> (then log in again).")
         default:
             nil
         }
@@ -87,10 +87,10 @@ enum SSHError: LocalizedError, Sendable, Equatable {
         let hostname = host.hostname
 
         if text.contains("bad permissions") || text.contains("unprotected private key") {
-            return .keyNotReadable("Die Dateirechte des Keys sind zu offen.")
+            return .keyNotReadable(String(localized: "The key file permissions are too open."))
         }
         if text.contains("invalid format") || text.contains("load key") {
-            return .keyNotReadable("Das Key-Format ist ungültig oder der Key ist passwortgeschützt.")
+            return .keyNotReadable(String(localized: "The key format is invalid or the key is passphrase-protected."))
         }
         if text.contains("no such identity") || (text.contains("identity file") && text.contains("not accessible")) {
             return .keyNotFound(host.expandedKeyPath ?? "–")
@@ -118,6 +118,6 @@ enum SSHError: LocalizedError, Sendable, Equatable {
             .split(whereSeparator: \.isNewline)
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .first { !$0.isEmpty && !$0.lowercased().hasPrefix("warning:") }
-        return .connectionFailed(detail ?? "Unbekannter Fehler (Exit-Code 255)")
+        return .connectionFailed(detail ?? String(localized: "Unknown error (exit code 255)"))
     }
 }

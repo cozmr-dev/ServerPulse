@@ -190,7 +190,7 @@ struct SearchField: View {
                         .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
-                .help("Suche zurücksetzen")
+                .help("Clear search")
             }
         }
         .font(.system(size: 13))
@@ -271,7 +271,7 @@ struct StatusBanner: View {
                         .background(Circle().fill(Color.primary.opacity(0.07)))
                 }
                 .buttonStyle(.plain)
-                .help("Ausblenden")
+                .help("Dismiss")
             }
         }
         .padding(12)

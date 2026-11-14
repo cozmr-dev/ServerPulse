@@ -29,19 +29,19 @@ struct SystemOverviewView: View {
 
             HStack(alignment: .top, spacing: 0) {
                 MetricGauge(
-                    title: "CPU",
+                    title: String(localized: "CPU"),
                     symbol: "cpu",
                     fraction: stats.cpuFraction,
                     detail: cpuDetail
                 )
                 MetricGauge(
-                    title: "RAM",
+                    title: String(localized: "RAM"),
                     symbol: "memorychip",
                     fraction: stats.memTotalBytes > 0 ? stats.memFraction : nil,
                     detail: "\(Format.storage(stats.memUsedBytes)) / \(Format.storage(stats.memTotalBytes))"
                 )
                 MetricGauge(
-                    title: primaryDisk.map { $0.mountPoint == "/" ? "System" : "Speicher" } ?? "Speicher",
+                    title: primaryDisk.map { $0.mountPoint == "/" ? String(localized: "System") : String(localized: "Storage") } ?? String(localized: "Storage"),
                     symbol: "internaldrive",
                     fraction: primaryDisk?.fraction,
                     detail: primaryDisk.map { "\(Format.storage($0.usedBytes)) / \(Format.storage($0.totalBytes))" } ?? "–"
@@ -71,8 +71,8 @@ struct SystemOverviewView: View {
 
     private var cpuDetail: String {
         var parts: [String] = []
-        if let cores = stats.cpuCores { parts.append("\(cores) Kerne") }
-        if let load = stats.load1 { parts.append("Load \(Format.decimal(load))") }
+        if let cores = stats.cpuCores { parts.append(String(localized: "\(cores) cores")) }
+        if let load = stats.load1 { parts.append(String(localized: "Load \(Format.decimal(load))")) }
         return parts.isEmpty ? "–" : parts.joined(separator: " · ")
     }
 }
@@ -112,7 +112,7 @@ private struct DiskRow: View {
                 Label(disk.displayName, systemImage: "internaldrive")
                     .font(.system(size: 11.5, weight: .medium))
                 Spacer()
-                Text("\(Format.storage(disk.usedBytes)) von \(Format.storage(disk.totalBytes)) · \(Format.percent(disk.fraction))")
+                Text("\(Format.storage(disk.usedBytes)) of \(Format.storage(disk.totalBytes)) · \(Format.percent(disk.fraction))")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()

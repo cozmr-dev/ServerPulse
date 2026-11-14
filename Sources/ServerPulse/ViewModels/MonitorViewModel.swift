@@ -182,12 +182,12 @@ final class MonitorViewModel {
         Task {
             do {
                 try await service.perform(action, containerID: container.id, on: host)
-                show(ActionMessage(isError: false, text: "„\(container.name)“ wurde \(action.pastTense)."))
+                show(ActionMessage(isError: false, text: action.successMessage(for: container.name)))
             } catch {
                 let suggestion = (error as? SSHError)?.recoverySuggestion.map { " \($0)" } ?? ""
                 show(ActionMessage(
                     isError: true,
-                    text: "„\(container.name)“: \(error.localizedDescription)\(suggestion)"
+                    text: "“\(container.name)”: \(error.localizedDescription)\(suggestion)"
                 ))
             }
             busyContainers.remove(key)
@@ -219,10 +219,10 @@ final class MonitorViewModel {
         Task {
             do {
                 try await service.perform(action, containerIDs: ids, on: host)
-                show(ActionMessage(isError: false, text: "„\(name)“ wurde \(action.pastTense) (\(ids.count) Container)."))
+                show(ActionMessage(isError: false, text: action.successMessage(forProject: name, count: ids.count)))
             } catch {
                 let suggestion = (error as? SSHError)?.recoverySuggestion.map { " \($0)" } ?? ""
-                show(ActionMessage(isError: true, text: "„\(name)“: \(error.localizedDescription)\(suggestion)"))
+                show(ActionMessage(isError: true, text: "“\(name)”: \(error.localizedDescription)\(suggestion)"))
             }
             busyContainers.subtract(keys)
             await refresh(host: host)

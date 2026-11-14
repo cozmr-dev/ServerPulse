@@ -44,8 +44,8 @@ struct DiskUsage: Identifiable, Sendable, Equatable {
 
     var displayName: String {
         switch mountPoint {
-        case "/": "System (/)"
-        case "/volume1": "Speicherpool (/volume1)"
+        case "/": String(localized: "System (/)")
+        case "/volume1": String(localized: "Storage pool (/volume1)")
         default: mountPoint
         }
     }
@@ -58,26 +58,28 @@ enum Format {
     static func storage(_ bytes: UInt64) -> String {
         let gb = Double(bytes) / gibibyte
         if gb >= 1024 {
-            return (gb / 1024).formatted(.number.precision(.fractionLength(2))) + " TB"
+            return (gb / 1024).formatted(.number.precision(.fractionLength(2)).locale(AppLanguage.locale)) + " TB"
         }
-        return gb.formatted(.number.precision(.fractionLength(1))) + " GB"
+        return gb.formatted(.number.precision(.fractionLength(1)).locale(AppLanguage.locale)) + " GB"
     }
 
     static func percent(_ fraction: Double) -> String {
-        (fraction * 100).formatted(.number.precision(.fractionLength(0))) + " %"
+        fraction.formatted(.percent.precision(.fractionLength(0)).locale(AppLanguage.locale))
     }
 
     static func decimal(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(2)))
+        value.formatted(.number.precision(.fractionLength(2)).locale(AppLanguage.locale))
     }
 
+    /// Laufzeit in der App-Sprache, z. B. „9 days, 3 hours“ bzw. „9 Tage, 3 Stunden“.
     static func uptime(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds)
-        let days = total / 86_400
-        let hours = (total % 86_400) / 3_600
-        let minutes = (total % 3_600) / 60
-        if days > 0 { return "\(days) \(days == 1 ? "Tag" : "Tage"), \(hours) Std." }
-        if hours > 0 { return "\(hours) Std., \(minutes) Min." }
-        return "\(minutes) Min."
+        let formatter = DateComponentsFormatter()
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = AppLanguage.locale
+        formatter.calendar = calendar
+        formatter.unitsStyle = .full
+        formatter.maximumUnitCount = 2
+        formatter.allowedUnits = seconds >= 86_400 ? [.day, .hour] : [.hour, .minute]
+        return formatter.string(from: max(60, seconds)) ?? ""
     }
 }
